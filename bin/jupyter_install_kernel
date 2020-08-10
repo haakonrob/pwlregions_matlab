@@ -3,5 +3,5 @@
 poetry run python \
     -m ipykernel install \
     --user \
-    --name halite \
-    --display-name "Python (halite)"
+    --name matlab \
+    --display-name "MATLAB"

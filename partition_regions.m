@@ -1,7 +1,7 @@
 function [regs_new, Ps_new] = partition_regions(regs, Ps)
 %PARTITION Partitions all regions into PWA regions.
 
-assert(length(regs) == length(Ps), "Assertion failed, number of regions and P matrices must be equal")
+assert(length(regs) == length(Ps), "Assertion failed, number of regions and P matrices must be equal (try Ps as a cell array)")
 % Divide the regions up enough to parallelise the work effectively.
 
 % Place regions in cell array, record number of subregions found

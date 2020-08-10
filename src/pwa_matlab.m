@@ -1,4 +1,4 @@
-function [regs] = pwl_matlab(net, varargin)
+function [regs] = pwa_matlab(net, varargin)
 %PWL_MATLAB Converts a MATLAB SeriesNetwork into a PWA function.
 %
 %   input_space is an optional parameter, but using it may increase

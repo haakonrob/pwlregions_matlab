@@ -5,12 +5,26 @@ This repo contains code that can compute the piecewise affine (PWA) representati
 
 The original code is written in MATLAB, despite most deep learning libraries being written in Python. This was done because MATLAB has access to the [MPT toolbox](http://people.ee.ethz.ch/~mpt/2/), which handles the necessary geometric computations. This toolbox also has methods for multiple-parametric optimisation and both implicit and explicit model predictive control (MPC), which is the direction we want to take this research. A conversion script for Tensorflow models is provided.
 
+Install
+-----
+
+
+
 TODO
 -----
-+ Restructure repo
-+ Examples in jupyter notebooks
++ Add comments
++ Add "install" instructions for MATlAb
++ Make a script that runs all tests
++ Replace pwa_matlab with a conversion script
++ Network class that has pwa() as a method and can be initialised from python / matlab
++ Add examples in jupyter notebooks
 + Add support for basic layers such as batch norm, dropout, etc
 + Add support for convolutions and pooling
+
+
+DONE
+----
++ Restructure repo ( 10/8/2020 9:50 )
 
 
 

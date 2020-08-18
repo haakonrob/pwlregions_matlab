@@ -1,0 +1,12 @@
+#!/bin/bash
+
+# Make sure that your current env has python 3.7 installed, otherwise MATLAB will complain
+
+MATLAB_LINK=`which matlab`
+MATLAB_BIN=`readlink -f $MATLAB_LINK`
+BIN_DIR=`dirname $MATLAB_BIN`
+PYTHON_DIR="$BIN_DIR/../extern/engines/python/"
+CURR_DIR="$PWD"
+cd "$PYTHON_DIR"
+python setup.py install
+cd "$PWD"

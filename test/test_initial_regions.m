@@ -1,3 +1,6 @@
+test_dir = fileparts(which(mfilename));
+addpath(fullfile(test_dir,'../src/hyperplane_arrangements'));
+
 H = [
     0.9302    0.6540   -0.4880;
     2.9320    0.2604   -0.8153;
@@ -12,25 +15,36 @@ H = [
          0         0    1.0000
 ];
 
+% Large square of space. Notably, contains all of the vertices of the
+% arrangement.
+space = Polyhedron('lb', [-100,-100], 'ub', [100,100]);
+
+[regs1,P1] = partition_regions(space, {H}); 
+[regs2,P2] = enumerate_regions(space, {H}); 
+
+assert(length(regs1) == 55, "Intersection algorithm gave wrong number of regions: "+ length(regs1));
+assert(length(regs2) == 55, "Enumeration algorithm gave wrong number of regions: "+ length(regs1));
+
 % Space is far away from origin, contains none of the intersections of the
 % hyperplanes. Does this affect the solution? There should be 10 regions.
 space = Polyhedron('lb', [50,-100], 'ub', [100,100]);
 
 [regs1,P1] = partition_regions(space, {H}); 
-[regs2,P2] = partition_regions2(space, {H}); 
+[regs2,P2] = enumerate_regions(space, {H}); 
 
 assert(length(regs1) == 10, "Intersection algorithm gave wrong number of regions: "+ length(regs1));
-assert(length(regs2) == 10, "Naive enumeration algorithm gave wrong number of regions: "+ length(regs1));
+assert(length(regs2) == 10, "Enumeration algorithm gave wrong number of regions: "+ length(regs1));
 
-dim = size(H, 2)-1;
-if dim <= 3
-    figure(1); 
-    plot(regs1, 'alpha', 0.2); 
-    axis equal;
-    title("Intersection algorithm");
-
-    figure(2); 
-    plot(regs2, 'alpha', 0.2);
-    axis equal;
-    title("Enumeration algorithm");
-end
+%% Visual comparison
+% dim = size(H, 2)-1;
+% if dim <= 3
+%     figure(1); 
+%     plot(regs1, 'alpha', 0.2); 
+%     axis equal;
+%     title("Intersection algorithm");
+% 
+%     figure(2); 
+%     plot(regs2, 'alpha', 0.2);
+%     axis equal;
+%     title("Enumeration algorithm");
+% end

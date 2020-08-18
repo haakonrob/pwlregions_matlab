@@ -1,7 +1,0 @@
-#!/usr/bin/env bash
-
-poetry run python \
-    -m ipykernel install \
-    --user \
-    --name matlab \
-    --display-name "MATLAB"

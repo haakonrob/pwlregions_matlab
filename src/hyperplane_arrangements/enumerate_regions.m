@@ -1,4 +1,4 @@
-function [regs_new, Ps_new] = partition_regions2(regs, Ps)
+function [regs_new, Ps_new] = enumerate_regions(regs, Ps)
 %PARTITION Partitions all regions into PWA regions.
 
 assert(length(regs) == length(Ps), "Assertion failed, number of regions and P matrices must be equal")

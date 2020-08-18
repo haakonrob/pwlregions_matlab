@@ -54,37 +54,37 @@ options = trainingOptions('adam', 'initialLearnRate', 0.001, 'MaxEpochs', 3, 'Ex
 %% Convert network to PWL form
 % Get linear regions of network within a box of side length π
 regs = pwl_matlab(net, makebox(nx+nu, pi), 'verbose', true);
-f = figure(1);
-regs.plot;
-axis equal
-title("Linear regions of network trained on pendulum data", 'interpreter', 'latex');
-xlabel("Angle $\theta$ (rad)", 'interpreter', 'latex');
-ylabel("Angular Velocity $\dot{\theta}$ ($ms^{-1}$)", 'interpreter', 'latex')
-zlabel("Input torque $u$ (N)")
+% f = figure(1);
+% regs.plot;
+% axis equal
+% title("Linear regions of network trained on pendulum data", 'interpreter', 'latex');
+% xlabel("Angle $\theta$ (rad)", 'interpreter', 'latex');
+% ylabel("Angular Velocity $\dot{\theta}$ ($ms^{-1}$)", 'interpreter', 'latex')
+% zlabel("Input torque $u$ (N)")
 
 
-%% Check network output
+%% Plot network output
 
 % Add functions for each separate input
-for i = 1:length(regs)
-P = regs(i).Data.P;
-regs(i).addFunction(AffFunction(P(1,1:end-1), P(1, end)), 'f1');
-regs(i).addFunction(AffFunction(P(2,1:end-1), P(2, end)), 'f2');
-end
+% for i = 1:length(regs)
+% P = regs(i).Data.P;
+% regs(i).addFunction(AffFunction(P(1,1:end-1), P(1, end)), 'f1');
+% regs(i).addFunction(AffFunction(P(2,1:end-1), P(2, end)), 'f2');
+% end
 
-f = figure(2);
-regs.fplot('f1');
-axis equal
-title("First output of network($\dot{\theta}$)", 'interpreter', 'latex');
-xlabel("$\theta$ [rad]", 'interpreter', 'latex');
-ylabel("$\dot{\theta}$ [rad $s^{-1}$]", 'interpreter', 'latex');
-zlabel("Network output $\dot{\theta}$ [rad$s^{-1}$]", 'interpreter', 'latex');
-
-f = figure(3);
-regs.fplot('f2');
-axis equal
-title("Second output of network($\ddot{\theta}$)", 'interpreter', 'latex');
-xlabel("$\theta$ [rad]", 'interpreter', 'latex');
-ylabel("$\dot{\theta}$ [rad $s^{-1}$]", 'interpreter', 'latex');
-zlabel("Network output $\ddot{\theta}$ [rad$s^{-2}$]", 'interpreter', 'latex');
+% f = figure(2);
+% regs.fplot('f1');
+% axis equal
+% title("First output of network($\dot{\theta}$)", 'interpreter', 'latex');
+% xlabel("$\theta$ [rad]", 'interpreter', 'latex');
+% ylabel("$\dot{\theta}$ [rad $s^{-1}$]", 'interpreter', 'latex');
+% zlabel("Network output $\dot{\theta}$ [rad$s^{-1}$]", 'interpreter', 'latex');
+% 
+% f = figure(3);
+% regs.fplot('f2');
+% axis equal
+% title("Second output of network($\ddot{\theta}$)", 'interpreter', 'latex');
+% xlabel("$\theta$ [rad]", 'interpreter', 'latex');
+% ylabel("$\dot{\theta}$ [rad $s^{-1}$]", 'interpreter', 'latex');
+% zlabel("Network output $\ddot{\theta}$ [rad$s^{-2}$]", 'interpreter', 'latex');
 

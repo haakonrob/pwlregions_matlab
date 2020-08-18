@@ -11,7 +11,7 @@ number_subregions_found = zeros(1,N);
 
 % For every subsequent hyperplane, bisect the currently known regions
 % recursively
-parfor r = 1 : N
+for r = 1 : N
     % Load working region and corresponding affine transformation
     reg = regions_cell{r};
     P = Ps{r};

@@ -1,5 +1,5 @@
 function [regs] = get_pwa_repr(obj, net, varargin)
-    %PWL_STRUCT Converts a MATLAB struct describing a neural network to its PWL
+    %GET_PWA_REPR Converts a MATLAB struct describing a neural network to its PWL
     % represention
     % 
     %   [net] is a struct array with fields:
@@ -69,7 +69,8 @@ function [regs] = get_pwa_repr(obj, net, varargin)
         end    
     end
     
-    % Add the corresponding affine function to each region
+    % Add the corresponding affine function to each region as the functions
+    % f1, f2 , f3 ...
     for j = 1:length(regs)
         P = Ps{j};
         % Save full output as function

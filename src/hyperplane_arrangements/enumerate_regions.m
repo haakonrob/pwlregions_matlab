@@ -1,5 +1,6 @@
 function [regs_new, Ps_new] = enumerate_regions(regs, Ps)
-%PARTITION Partitions all regions into PWA regions.
+%ENUMERATE_REGIONS Finds all regions of a hyperplane arrangement by
+% enumerating them.
 
 assert(length(regs) == length(Ps), "Assertion failed, number of regions and P matrices must be equal")
 

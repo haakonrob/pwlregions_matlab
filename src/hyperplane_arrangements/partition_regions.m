@@ -1,7 +1,7 @@
-function [regs_new, Ps_new] = partition_regions(regs, Ps)
-%PARTITION Partitions all regions into PWA regions.
+function [regs_new, Hs_new] = partition_regions(regs, Hs)
+%PARTITION_REGIONS Finds all regions of a hyperpalne arraangement though iterative bisection.
 
-assert(length(regs) == length(Ps), "Assertion failed, number of regions and P matrices must be equal (try Ps as a cell array)")
+assert(length(regs) == length(Hs), "Assertion failed, number of regions and hyperplane arrangements must be equal (try Hs as a cell array)")
 % Divide the regions up enough to parallelise the work effectively.
 
 % Place regions in cell array, record number of subregions found
@@ -14,13 +14,13 @@ number_subregions_found = zeros(1,N);
 for r = 1 : N
     % Load working region and corresponding affine transformation
     reg = regions_cell{r};
-    P = Ps{r};
+    H = Hs{r};
     
-    % For each hyperplane (rows of P: [w, b], except the last), recursively 
+    % For each hyperplane recursively 
     % partition regions using the hyperplane w'x = -b
-    for i = 1:(size(P,1)-1)
-        if ~all(P(i,1:end-1) == 0)
-            hplane = Polyhedron( 'Ae', P(i,1:end-1), 'Be', -P(i,end));
+    for i = 1:(size(H,1))
+        if ~all(H(i,1:end-1) == 0)
+            hplane = Polyhedron( 'Ae', H(i,1:end-1), 'Be', -H(i,end));
             rec_regions(hplane, reg);
         end
     end
@@ -41,15 +41,15 @@ regs_new = [regions_cell{:}];
 % Update Ps by finding out which neurons (rows of P) are inactive in each
 % region. The corresponding rows can then be set to zero in the P matrix
 % for that region.
-Ps_new = cell(1,length(regs_new));
+Hs_new = cell(1,length(regs_new));
 for r = 1:length(number_subregions_found)
     for c = 1:number_subregions_found(r)
         i = sum(number_subregions_found(1:r-1))+c;  % ith region
-        P = Ps{r};
-        active = max(0, (P * [regs_new(i).interiorPoint.x ; 1])) > 0;
-        P(~active, :) = 0;
-        P(end,end) = 1;  % Just to be sure
-        Ps_new{i} = P;        
+        H = Hs{r};
+        active = max(0, (H * [regs_new(i).interiorPoint.x ; 1])) > 0;
+        H(~active, :) = 0;
+        H(end,end) = 1;  % Just to be sure
+        Hs_new{i} = H;        
     end
 end
 

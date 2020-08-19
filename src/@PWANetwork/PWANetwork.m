@@ -30,7 +30,7 @@ classdef PWANetwork < handle
         end
         
         function regs = pwa(obj, input_space)
-            regs = obj.get_pwa_repr(obj.layers,'input_space',input_space);
+            regs = obj.pwa_representation(obj.layers,'input_space', input_space);
             obj.regions = regs;
         end
         

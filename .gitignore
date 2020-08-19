@@ -135,3 +135,6 @@ data/**/*r
 # Vscode editor settings
 .vscode
 
+
+# MATLAB settings
+# *.m~

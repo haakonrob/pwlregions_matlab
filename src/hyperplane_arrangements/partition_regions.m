@@ -29,7 +29,7 @@ for r = 1 : N
     subregions = polyhedron_dfs(reg);
     
     % Filter out empty sets and lower dim intersections
-    regions_cell{r} = subregions(~subregions.isEmptySet & subregions.isFullDim);
+    regions_cell{r} = subregions(~subregions.isEmptySet);
     
     % Record number of subregions found
     number_subregions_found(r) = length(regions_cell{r});
@@ -62,11 +62,14 @@ end
 function rec_regions(hplane, reg)
     if reg.doesIntersect(hplane) % then add two children
         if ~isfield(reg.Data, 'children') || isempty(reg.Data.children)
-            new_regs = ...
-                [reg & Polyhedron( hplane.Ae, hplane.be) , ...
-                 reg & Polyhedron(-hplane.Ae,-hplane.be)];
+            R1 = reg & Polyhedron( hplane.Ae, hplane.be);
+            R2 = reg & Polyhedron(-hplane.Ae,-hplane.be);
+%             reg.Data.children = [R1.minHRep , R2.minHRep];
+            reg.Data.children = [R1, R2];
             % Make sure that only full-dim intersections are passed on
-            reg.Data.children = new_regs(new_regs.isFullDim);
+            % This is actually desired if you have a lower dim input space.
+            % Lets hope that its not actually too problematic.
+%             reg.Data.children = new_regs(new_regs.isFullDim);
 %             for j = 1:length(reg.Data.children)
 %                 reg.Data.children(j).Data.P = reg.Data.P;
 %             end

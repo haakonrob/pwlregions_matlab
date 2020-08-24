@@ -29,8 +29,8 @@ classdef PWANetwork < handle
                            
         end
         
-        function regs = pwa(obj, input_space)
-            regs = obj.pwa_representation(obj.layers,'input_space', input_space);
+        function regs = pwa(obj, varargin)
+            regs = obj.pwa_representation(obj.layers, varargin{:});
             obj.regions = regs;
         end
         

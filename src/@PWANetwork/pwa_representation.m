@@ -93,7 +93,7 @@ function [regs] = pwa_representation(obj, net, varargin)
                      Ps{k} = [P ; zeros(1,size(P,2)), 1];
                 end
             case 'convolution2'
-                % Need to do this
+                % TODO
                 kern = layer.kernel(:);
             otherwise
                 report("Unknown layer type for layer "+i)

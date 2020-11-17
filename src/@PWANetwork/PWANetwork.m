@@ -19,7 +19,7 @@ classdef PWANetwork < handle
             
             spec = varargin{1};
             
-            if ischar(spec) || isstring(spec)
+            if ischar(spec) || isstring(spec)7
                 obj.layers = obj.from_file(spec); 
             elseif isstruct(spec)
                 obj.layers = obj.validate_layers(spec);
@@ -44,10 +44,8 @@ classdef PWANetwork < handle
             [~, ~, ext] = fileparts(filepath);
             if strcmp(ext, '.mat')
                 layers = obj.load_layers_from_mat_file(filepath);
-            elseif strcmp(ext, '.json')
-                layers = obj.load_layers_from_json_file(filepath);
             else
-                error("Unsupported file type given")
+                layers = obj.load_layers_from_json_file(filepath);
             end
             obj.validate_layers(layers);
             

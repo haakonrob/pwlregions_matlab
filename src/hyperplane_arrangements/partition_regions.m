@@ -1,4 +1,4 @@
-function [regs_new, Hs_new] = partition_regions(regs, Hs)
+function [regs_new, Hs_new] = partition_regions(regs, Hs, max_depth)
 %PARTITION_REGIONS Finds all regions of a hyperpalne arraangement though iterative bisection.
 
 assert(length(regs) == length(Hs), "Assertion failed, number of regions and hyperplane arrangements must be equal (try Hs as a cell array)")
@@ -21,7 +21,7 @@ for r = 1 : N
     for i = 1:(size(H,1))
         if ~all(H(i,1:end-1) == 0)
             hplane = Polyhedron( 'Ae', H(i,1:end-1), 'Be', -H(i,end));
-            rec_regions(hplane, reg);
+            rec_regions(hplane, reg, 0, max_depth);
         end
     end
     
@@ -59,23 +59,18 @@ end
 
 % Recurses through the tree of regions, checking for intersections with a
 % hyperplane
-function rec_regions(hplane, reg)
-    if reg.doesIntersect(hplane) % then add two children
+function rec_regions(hplane, reg, depth, max_depth)
+    if depth >= max_depth
+        reg.Data.truncate = true;
+        reg.Data.depth = depth;
+    elseif reg.doesIntersect(hplane) % then add two children
         if ~isfield(reg.Data, 'children') || isempty(reg.Data.children)
             R1 = reg & Polyhedron( hplane.Ae, hplane.be);
             R2 = reg & Polyhedron(-hplane.Ae,-hplane.be);
-%             reg.Data.children = [R1.minHRep , R2.minHRep];
             reg.Data.children = [R1, R2];
-            % Make sure that only full-dim intersections are passed on
-            % This is actually desired if you have a lower dim input space.
-            % Lets hope that its not actually too problematic.
-%             reg.Data.children = new_regs(new_regs.isFullDim);
-%             for j = 1:length(reg.Data.children)
-%                 reg.Data.children(j).Data.P = reg.Data.P;
-%             end
         else % recurse through the children of reg
             for i = 1:length(reg.Data.children)
-                rec_regions(hplane, reg.Data.children(i));
+                rec_regions(hplane, reg.Data.children(i), depth+1,max_depth);
             end
         end
     end

@@ -24,6 +24,7 @@ function [regs] = pwa_representation(obj, net, varargin)
     parser.addRequired( 'net',                 @(s) isa(net, 'struct'));
     parser.addOptional( 'inputs',  [],         @(x) isempty(x) || isnumeric(x));
     parser.addOptional( 'input_space',  [],    @(x) isempty(x) || isa(x, 'Polyhedron'));
+    parser.addOptional( 'max_depth', inf,       @isnumeric);
     parser.addParameter('ignore_errors',false, @islogical);
     parser.addParameter('verbose',false, @islogical);
     
@@ -31,6 +32,7 @@ function [regs] = pwa_representation(obj, net, varargin)
     parser.parse(net, varargin{:});
     inputs = parser.Results.inputs;
     input_space = parser.Results.input_space;
+    max_depth = parser.Results.max_depth;
     verbose = parser.Results.verbose;
     
     % Allows us to test the detection of layers without throwing errors.
@@ -104,7 +106,7 @@ function [regs] = pwa_representation(obj, net, varargin)
                 % Do nothing
             case 'relu'
                 hyperplanes = Ps;
-                [regs, Ps] = partition_regions(regs, hyperplanes);
+                [regs, Ps] = partition_regions(regs, hyperplanes, max_depth);
             case 'pwa'
                 report("general pwa activation not supported yet")
             case 'maxout'
@@ -121,6 +123,16 @@ function [regs] = pwa_representation(obj, net, varargin)
     % and is required for fplot() to work.
     % 
     for j = 1:length(regs)
+%         if isfield(regs(j).Data, 'truncate') && regs(j).Data.truncate
+%             regs(j).minVRep;
+%             V = regs(j).V';
+%             Y = obj.eval(V);
+%             p = linsolve([V', ones(size(V',1),1)], Y');
+%             P = [p' ; zeros(1,size(p,1)-1) , 1];
+%         else
+%             P = Ps{j};
+%         end
+
         P = Ps{j};
         % Save full output as function
         regs(j).addFunction(AffFunction(P(1:end-1, 1:end-1), P(1:end-1, end)), "f");

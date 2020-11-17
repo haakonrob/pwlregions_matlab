@@ -90,6 +90,17 @@ classdef PWANetwork < handle
         
         function y = eval(obj,x)
             %eval Compute the output of the network given x
+            for i = 1:length(obj.layers)
+               switch (obj.layers(i).type)
+                   case 'dense'
+                       x = obj.layers(i).W * x + obj.layers(i).b;
+                   otherwise
+                       error('Unsupported layer type');
+               end
+               if obj.layers(i).activation == 'relu'
+                    x = max(0,x);
+               end
+            end
             y = x;
         end
     end

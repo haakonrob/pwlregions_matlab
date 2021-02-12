@@ -1,4 +1,4 @@
-function [regs] = pwa_representation(obj, net, varargin)
+function [regs, root] = pwa_representation(obj, net, varargin)
     %PWA_REPRESENTATION Converts a MATLAB struct describing a neural
     %network to its PWA
     % represention
@@ -19,20 +19,30 @@ function [regs] = pwa_representation(obj, net, varargin)
 %     addpath(fullfile(dir, 'hyperplane_arrangements'));
 %     addpath(fullfile(dir, 'utils'));
     
+    
+    
     % Define inputs
     parser = inputParser;
-    parser.addRequired( 'net',                 @(s) isa(net, 'struct'));
-    parser.addOptional( 'inputs',  [],         @(x) isempty(x) || isnumeric(x));
-    parser.addOptional( 'input_space',  [],    @(x) isempty(x) || isa(x, 'Polyhedron'));
-    parser.addOptional( 'max_depth', inf,       @isnumeric);
-    parser.addParameter('ignore_errors',false, @islogical);
-    parser.addParameter('verbose',false, @islogical);
+    parser.addRequired( 'net',                      @(s) isa(net, 'struct'));
+    parser.addOptional( 'inputs',           [],     @(x) isempty(x) || isnumeric(x));
+    parser.addOptional( 'input_space',      [],     @(x) isempty(x) || isa(x, 'Polyhedron'));
+    parser.addOptional( 'max_depth',        inf,    @isnumeric);
+    parser.addOptional( 'min_diameter',     0,      @isnumeric);
+    parser.addOptional( 'min_datapoints',   0,      @isnumeric);
+    parser.addOptional( 'approx_data',      false,  @islogical);
+%     parser.addOptional( 'data',             [] ,    @isnumeric );
+    parser.addParameter('ignore_errors',    false,  @islogical);
+    parser.addParameter('verbose',          false,  @islogical);
     
     % Parse inputs
     parser.parse(net, varargin{:});
     inputs = parser.Results.inputs;
-    input_space = parser.Results.input_space;
+    root = parser.Results.input_space;
     max_depth = parser.Results.max_depth;
+    min_diameter = parser.Results.min_diameter;
+    min_datapoints = parser.Results.min_datapoints;
+%     data = parser.Results.data;
+    approx_data = parser.Results.approx_data;
     verbose = parser.Results.verbose;
     
     % Allows us to test the detection of layers without throwing errors.
@@ -50,9 +60,9 @@ function [regs] = pwa_representation(obj, net, varargin)
         net(1).W = net(1).W(:, inputs);
     end
     
-    if isempty(input_space)
+    if isempty(root)
        % Input space is R^n, where n is the input dim of the network.
-       input_space = makebox(size(net(1).W, 2), inf);
+       root = makebox(size(net(1).W, 2), inf);
     else
         % Input space matches the dimensions of the inputs to consider.
         % This doesn't mean that the object isn't lower dimensional! It
@@ -60,14 +70,16 @@ function [regs] = pwa_representation(obj, net, varargin)
         % TODO, this keeps the computations in a high dim space, figure out
         % if you can project the weights of the first layer onto this input
         % space, thereby reducing the computational cost significantly.
-        assert(input_space.Dim == size(net(1).W, 2));
+        assert(root.Dim == size(net(1).W, 2));
     end
     
     
     % Initialise the regions array with the specified input domain and an
     % identity affine transformation.
-    regs = input_space;
-    Ps{1} = eye(input_space.Dim+1);
+    regs = root;
+    Ps{1} = eye(root.Dim+1);
+    regs.Data = struct(); % In case the region has been used as a root before
+    regs.Data.depth = 0;  % Node depth is used for truncation
     
     for i = 1:length(net)
         layer = net(i);
@@ -106,7 +118,7 @@ function [regs] = pwa_representation(obj, net, varargin)
                 % Do nothing
             case 'relu'
                 hyperplanes = Ps;
-                [regs, Ps] = partition_regions(regs, hyperplanes, max_depth);
+                [regs, Ps] = partition_regions(regs, hyperplanes, max_depth, min_diameter, min_datapoints);
             case 'pwa'
                 report("general pwa activation not supported yet")
             case 'maxout'
@@ -122,22 +134,107 @@ function [regs] = pwa_representation(obj, net, varargin)
     % This allows you to compute the output of the PWA function,
     % and is required for fplot() to work.
     % 
+    
+    global Xtrain Ytrain
+    Ynet = obj.eval(Xtrain);
+    
     for j = 1:length(regs)
-%         if isfield(regs(j).Data, 'truncate') && regs(j).Data.truncate
-%             regs(j).minVRep;
-%             V = regs(j).V';
-%             Y = obj.eval(V);
-%             p = linsolve([V', ones(size(V',1),1)], Y');
-%             P = [p' ; zeros(1,size(p,1)-1) , 1];
-%         else
-%             P = Ps{j};
-%         end
+        if isfield(regs(j).Data, 'truncate') && regs(j).Data.truncate
+            
+            dim = regs(j).Dim;
+            cd = regs(j).Data.contains_data;
+            m = size(Ynet,1);
+            P = zeros(m, dim+1);
 
-        P = Ps{j};
+            if ~approx_data 
+                % Instead of just passing the region through, approximate the
+                % network output by applying least squares to the vertices of
+                % the region. This involves finding the convex hull of the
+                % region, but shouldn't be a problem when max_depth is low
+            
+%                 % This seems to give the best results, but minVRep is really, really slow
+%                 regs(j).minVRep;
+%                 V = regs(j).V';
+% 
+%                 % This works, but never really gets the outermost points
+%                 centre = regs(j).interiorPoint.x;
+%                 radius = regs(j).interiorPoint.r;
+%                 V = centre + 2*radius*(rand(regs(j).Dim, 100)-0.5);
+%                 valid = regs(j).contains(V);
+%                 V = V(:,valid);
+% 
+%                 % Extreme points of the region in some random directions, magic
+%                 % number of directions, but seems to be much faster than the
+%                 % convex hull thing. End up solving many LPs though.
+%                 V = randn(regs(j).Dim ,100);
+%                 success = false(size(V));
+%                 for i = 1:size(V,2)
+%                    p = regs(j).extreme(V(:,i)).x; 
+%                    if ~isempty(p)
+%                      success(i) = true;
+%                      V(:,i) = p;
+%                    end
+%                 end
+%                 V = V(:,success);
+
+                % Collect points by raycasting
+%                 c = regs(j).interiorPoint.x;  % Find centre, low cost LP
+%                 rays = randn(regs(j).Dim, 2000); % Generate random rays (TODO, how to choose this wrt dimension?)
+%                 rays = rays./vecnorm(rays);
+%                 W = regs(j).H(:,1:end-1);
+%                 b = regs(j).H(:,end);
+%                 T = (b - W*c)./(W*rays); % Intersect rays with polyhedron
+                diam = estimate_region_diameter(regs(j));
+                V = zeros(dim,1000);
+                start = 1;
+                while true
+                    V_ = diam/2*(randn(dim, 1000)) + regs(j).interiorPoint.x;
+                    V_ = V_(:, regs(j).contains(V_));
+                    if size(V_,2) == 0
+                        continue
+                    end
+                    stop = min(start+size(V_,2), 1000);
+                    V(:,start:stop) = V_(:,1:stop-start);
+                    if stop >= 1000
+                        break
+                    end
+                end
+%                 points1 = rays.*min(T + 1e10*(T<=0),[],1) + c; % Shortest forward rays
+%                 points2 = rays.*max(T - 1e10*(T>=0),[],1) + c; % Shortest backward rays
+%                 V = [points1 , points2];  % Collect points
+                
+%                 % Just naively sample the network around the centre of the
+%                 % region
+%                 c = regs(j).interiorPoint.x;  % Find centre, low cost LP
+%                 r = regs(j).interiorPoint.r;  % Find centre, low cost LP
+%                 V = 4*r*(rand(regs(j).Dim, 1000)-0.5) + c;
+
+                % Evaluate the samples using the network
+                Y = obj.eval(V);
+
+                for i = 1:m
+                    P(i,:) = fitlm(V', Y').Coefficients.Estimate;
+                end
+                P = [p ; zeros(1,size(p,2)-1) , 1];
+            else
+                for i = 1:m
+                    P(i,:) = fitlm(Xtrain(:,cd)', Ynet(i,cd)').Coefficients.Estimate;
+                end
+                b = P(:,1);
+                P(:,1:end-1) = P(:,2:end); P(:,end) = b;
+                P = [P; zeros(1,dim) , 1];
+            end
+        else
+            P = Ps{j};
+        end
+
+%         P = Ps{j};
         % Save full output as function
-        regs(j).addFunction(AffFunction(P(1:end-1, 1:end-1), P(1:end-1, end)), "f");
-        for i = 1:size(P, 1)-1
-            regs(j).addFunction(AffFunction(P(i, 1:end-1), P(i, end)), "f"+i);
+        if ~isempty(P)
+            regs(j).addFunction(AffFunction(P(1:end-1, 1:end-1), P(1:end-1, end)), "f");
+            for i = 1:size(P, 1)-1
+                regs(j).addFunction(AffFunction(P(i, 1:end-1), P(i, end)), "f"+i);
+            end
         end
         % Save local P matrix for later use
         regs(j).Data.P = P;

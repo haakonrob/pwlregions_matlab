@@ -5,6 +5,7 @@ classdef PWANetwork < handle
     properties(SetAccess=private, Transient=true)
 		layers  % Struct array of the layers of the network
         regions
+        root
     end
     
     methods(Access = public)
@@ -19,7 +20,7 @@ classdef PWANetwork < handle
             
             spec = varargin{1};
             
-            if ischar(spec) || isstring(spec)7
+            if ischar(spec) || isstring(spec)
                 obj.layers = obj.from_file(spec); 
             elseif isstruct(spec)
                 obj.layers = obj.validate_layers(spec);
@@ -30,8 +31,9 @@ classdef PWANetwork < handle
         end
         
         function regs = pwa(obj, varargin)
-            regs = obj.pwa_representation(obj.layers, varargin{:});
-            obj.regions = regs;
+            [obj.regions,obj.root] = obj.pwa_representation(obj.layers, varargin{:});
+            regs = obj.regions;
+%             obj.root = root;
         end
         
         function plot_output(obj, i)
@@ -76,6 +78,13 @@ classdef PWANetwork < handle
         function to_json(obj, filepath)
             % Output a json file containing the layers of the network
             data = jsonencode(obj.layers);
+            fid=fopen(filepath,'w');
+            fprintf(fid, data);
+        end
+        
+        function regs_to_json(obj, filepath)
+            % Output a json file containing a tree describing the regions
+            data = jsonencode(obj.regs_to_tree());
             fid=fopen(filepath,'w');
             fprintf(fid, data);
         end

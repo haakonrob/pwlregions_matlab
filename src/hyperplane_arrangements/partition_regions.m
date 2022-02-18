@@ -83,15 +83,16 @@ function rec_regions(hplane, reg, max_depth, min_diameter, min_datapoints)
 %             R2.Data.est_diameter = estimate_region_diameter(R2);
             
             % Update the contained data, initialise root if needed
-            if ~isfield(reg.Data, 'contains_data')
-                reg.Data.contains_data = getContainedData(reg, []);
+            if min_datapoints > 0
+                if ~isfield(reg.Data, 'contains_data')
+                    reg.Data.contains_data = getContainedData(reg, []);
+                end
+                cd = reg.Data.contains_data;
+                R1.Data.contains_data = cd;
+                R1.Data.contains_data(cd) = getContainedData(R1, cd);
+                R2.Data.contains_data = cd;
+                R2.Data.contains_data(cd) = getContainedData(R2, cd);
             end
-            cd = reg.Data.contains_data;
-            R1.Data.contains_data = cd;
-            R1.Data.contains_data(cd) = getContainedData(R1, cd);
-            R2.Data.contains_data = cd;
-            R2.Data.contains_data(cd) = getContainedData(R2, cd);
-            
             % Add new children
             reg.Data.children = [R1, R2];
             
@@ -125,5 +126,3 @@ function contains_data = getContainedData(reg, cd)
         contains_data = reg.contains(Xtrain(1:d,cd));
     end
 end
-
-

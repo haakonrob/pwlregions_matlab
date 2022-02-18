@@ -25,7 +25,7 @@ classdef PWANetwork < handle
             elseif isstruct(spec)
                 obj.layers = obj.validate_layers(spec);
             else
-                error("asdfError: Need to specify network specification. This can be a JSON file, a .mat file, or a struct array."); 
+                error("Error: Need to specify network specification. This can be a JSON file, a .mat file, or a struct array."); 
             end
                            
         end
@@ -97,8 +97,7 @@ classdef PWANetwork < handle
             end
         end
         
-        function y = eval(obj,x)
-            %eval Compute the output of the network given x
+        function y = eval(obj,x)         %eval Compute the output of the network given x
             for i = 1:length(obj.layers)
                switch (obj.layers(i).type)
                    case 'dense'
@@ -114,4 +113,3 @@ classdef PWANetwork < handle
         end
     end
 end
-

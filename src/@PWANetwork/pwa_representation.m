@@ -136,7 +136,10 @@ function [regs, root] = pwa_representation(obj, net, varargin)
     % 
     
     global Xtrain Ytrain
-    Ynet = obj.eval(Xtrain);
+    if min_datapoints>0
+        assert(~isempty(Xtrain),'Training data Xtrain must be given.')
+        Ynet = obj.eval(Xtrain);
+    end
     
     for j = 1:length(regs)
         if isfield(regs(j).Data, 'truncate') && regs(j).Data.truncate
